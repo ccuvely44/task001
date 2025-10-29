@@ -1,0 +1,1469 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>본캐찾기</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', '맑은 고딕', sans-serif;
+            margin: 0;
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding-top: 8vh;
+            box-sizing: border-box;
+        }
+        main {
+            width: 100%;
+            max-width: 680px;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
+            position: relative;
+        }
+        button {
+            padding: 12px 28px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: white;
+            background-color: #007bff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .page {
+            display: none;
+        }
+        .page.active {
+            display: block;
+        }
+
+        /* --- 언어 선택 목록 상자 스타일 수정 --- */
+        .language-selector {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .language-selector label {
+            font-size: 1rem;
+            color: #333;
+            font-weight: 500;
+        }
+        .language-selector select {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            font-size: 1rem;
+            cursor: pointer;
+            background-color: white;
+            min-width: 80px;
+        }
+
+        /* --- [추가됨] 경남대 로고 스타일 --- */
+        #ku-logo {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            height: 70px; /* 로고 높이 */
+            width: auto;
+            z-index: 10;
+        }
+
+
+        #start-page h1 {
+            margin-top: 30px;
+            margin-bottom: 30px;
+            height: 2.5em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .form-box {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            border: 1px solid #e0e0e0;
+            padding: 30px;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+            width: 530px;
+            box-sizing: border-box;
+            min-height: 160px;
+        }
+        .form-inner-container {
+            display: inline-flex;
+            flex-direction: column;
+            gap: 15px;
+            text-align: left;
+            margin: auto;
+            width: 100%;
+            position: relative;
+            left: -15px;
+        }
+        .form-row {
+            display: flex;
+            gap: 20px;
+        }
+        .form-row .input-group {
+            flex: 1;
+        }
+        .input-group {
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+        }
+        .input-group label {
+            white-space: nowrap;
+            margin-right: 8px;
+            min-width: 65px;
+            text-align: right;
+        }
+        .input-group label,
+        .input-group select,
+        .input-group input[type="text"] {
+            font-size: 1rem;
+        }
+        .input-group select,
+        .input-group input[type="text"] {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            flex: 1;
+            box-sizing: border-box;
+        }
+
+        .button-container {
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        #start-btn {
+            min-width: 220px;
+            height: 50px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #prev-btn, #home-btn, #restart-btn {
+            background-color: #6c757d;
+        }
+        #prev-btn:hover, #home-btn:hover, #restart-btn:hover {
+            background-color: #5a6268;
+        }
+
+
+        .question-container { margin: 20px auto; }
+        .progress-bar { width: 100%; background-color: #e0e0e0; border-radius: 10px; overflow: hidden; margin-bottom: 10px; }
+        .progress { height: 10px; background-color: #007bff; width: 0%; transition: width 0.3s; }
+        .progress-text { font-size: 0.9rem; color: #666; margin-bottom: 10px; }
+        .question-box { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .question-box h2 {
+            font-size: 1.4rem;
+            margin-top: 0;
+            margin-bottom: 20px;
+            text-align: left;
+            word-break: keep-all;
+            height: 3.5em;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: flex-start;
+            gap: 0.2em;
+        }
+        .question-box h2 span:first-child {
+            font-weight: bold;
+            margin-right: 5px;
+            display: inline-block;
+        }
+         .question-box h2 span:last-child {
+            display: inline;
+         }
+
+        .question-image { width: 100%; height: auto; border-radius: 8px; margin-bottom: 25px; }
+
+        .options {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+        }
+        .options .option-input { display: none; }
+        .options .option-label {
+            padding: 15px 2px;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 30px;
+            white-space: normal;
+            line-height: 1.3;
+        }
+
+        .options .option-label:hover { background-color: #e9e9f9; }
+        .options .option-input:checked + .option-label {
+            background-color: #007bff; color: white; border-color: #0056b3; font-weight: bold;
+        }
+
+        .question-nav {
+            display: flex;
+            gap: 2px;
+            margin-bottom: 20px;
+        }
+        .nav-item {
+            flex: 1;
+            height: 25px;
+            border-radius: 4px;
+            background-color: #e0e0e0;
+            color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .nav-item:hover {
+            background-color: #ccc;
+        }
+        .nav-item.active {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+        }
+        .nav-item.unanswered {
+            background-color: #ef4444;
+            color: white;
+        }
+        .nav-item.answered {
+            background-color: #22c55e;
+            color: white;
+        }
+
+
+        .result-box {
+            margin: 40px auto; padding: 30px; background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            text-align: left;
+        }
+        .result-box h2 {
+            margin-top: 0;
+            margin-bottom: 5px;
+            font-size: 2rem;
+            text-align: center;
+        }
+        .result-box p#result-subtitle {
+            text-align: center;
+            color: #555;
+            font-size: 1.1rem;
+            margin-top: 5px;
+            margin-bottom: 15px;
+        }
+
+        .result-section {
+            background-color: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin-bottom: 15px;
+        }
+        .result-section h3 {
+            margin-top: -5px;
+            margin-bottom: 5px;
+            font-size: 1.2rem;
+            color: #333;
+            text-align: center;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 8px;
+        }
+
+        .percentage-container { display: flex; height: 30px; border-radius: 15px; overflow: hidden; margin-bottom: 10px; }
+        .teto-bar { background-color: #4dabf7; }
+        .egen-bar { background-color: #ff8787; }
+        .percentage-bar { display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; transition: width 0.5s ease-in-out; }
+        .percentage-labels { display: flex; justify-content: space-between; font-size: 0.9rem; padding: 0 5px; }
+        .percentage-labels span {
+             display: inline-block;
+        }
+
+
+        .result-section h4 {
+            font-size: 1.1rem;
+            color: #111;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            text-align: center;
+            font-weight: bold;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+
+        /* --- [수정됨] 핵심태그 컨테이너 스타일 (가로 정렬) --- */
+        .core-keyword-container {
+            display: flex;
+            flex-wrap: wrap; /* 내용이 많으면 다음 줄로 */
+            justify-content: center; /* 가운데 정렬 */
+            gap: 8px 10px; /* 태그 간격 (세로 가로) */
+            margin-top: 15px;
+            padding: 0 10px;
+        }
+        /* --- [수정됨] 성격태그 컨테이너 스타일 (세로 정렬) --- */
+        .trait-keyword-container {
+            display: flex;
+            flex-direction: column; /* 세로로 쌓기 */
+            align-items: center;    /* 가운데 정렬 */
+            gap: 10px;              /* 태그 사이 간격 */
+            margin-top: 15px;
+            padding: 0 10px;
+        }
+        /* --- [수정됨] 키워드 태그 공통 스타일 --- */
+        .keyword-tag {
+            background-color: #e9ecef;
+            color: #495057;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            white-space: normal; /* 글자가 길면 자동 줄바꿈 */
+            text-align: center; /* 텍스트 가운데 정렬 */
+            line-height: 1.4;
+            box-sizing: border-box;
+            max-width: 90%; /* 너무 길어지는 것 방지 */
+        }
+         /* 핵심태그에만 적용 (가로 정렬 시 너비 자동) */
+        .core-keyword-container .keyword-tag {
+             width: auto;
+        }
+         /* 성격태그에만 적용 (세로 정렬 시 너비 fit-content) */
+        .trait-keyword-container .keyword-tag {
+            width: fit-content;
+        }
+
+
+        .mbti-tags {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 10px 0;
+            max-width: 400px;
+            margin: 0 auto;
+            transform: translateX(-16px);
+        }
+        .mbti-tag-item {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+        .mbti-tag {
+            background-color: #007bff;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+            display: inline-block;
+        }
+        .mbti-description {
+            font-size: 0.95rem;
+            color: #555;
+            line-height: 1.4;
+            text-align: center;
+            word-break: keep-all;
+            margin: 0;
+        }
+
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-overlay.visible {
+            display: flex;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+        .modal-content h3 {
+            margin-top: 0;
+            font-size: 1.4rem;
+        }
+        .modal-content p {
+            margin-bottom: 25px;
+            font-size: 1.1rem;
+            color: #333;
+            word-break: keep-all;
+            white-space: pre-wrap;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+         #loading-modal p {
+            margin-bottom: 0;
+       }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @media (max-width: 600px) {
+            .language-selector {
+                top: 5px;
+                right: 5px;
+            }
+            .language-selector select {
+                font-size: 0.85rem;
+                padding: 4px 8px;
+            }
+            #ku-logo {
+                top: 5px;
+                left: 5px;
+                height: 50px; /* 모바일에서 더 작게 */
+            }
+             .form-box {
+                width: 95%;
+             }
+             .options {
+                  grid-template-columns: repeat(3, 1fr);
+             }
+             .options .option-label {
+                  font-size: 0.75rem;
+                  padding: 10px 2px;
+             }
+        }
+
+        #ku-logo-footer {
+            display: block;
+            max-width: 300px;
+            width: 80%;
+            height: auto;
+            margin: 30px auto 20px auto;
+        }
+
+        #copyright-text {
+            text-align: center;
+            font-size: 0.85rem;
+            color: #888;
+            margin-top: -10px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <div class="language-selector">
+            <label for="language-select" data-translate-key="languageLabel">언어:</label>
+            <select id="language-select">
+                <option value="ko" selected>한국어</option>
+                <option value="en">English</option>
+                <option value="jp">日本語</option>
+                <option value="cn">中文</option>
+            </select>
+        </div>
+
+        <div id="start-page" class="page active">
+            <img src="https://github.com/ccuvely44/task001/blob/main/images/KU_Logo_001.jpg?raw=true" id="ku-logo" alt="Kyungnam University Logo">
+            
+            <h1 data-translate-key="mainTitle">본캐찾기</h1>
+            <div class="form-box">
+                <div class="form-inner-container">
+                    <div class="form-row">
+                        <div class="input-group">
+                            <label for="age-select" data-translate-key="ageLabel">나이:</label>
+                            <select name="age" id="age-select">
+                                <option value="" data-translate-key="selectOption">-- 선택 --</option>
+                                <option value="10s" data-translate-key="age10s">10대</option>
+                                <option value="20s" data-translate-key="age20s">20대</option>
+                                <option value="30s" data-translate-key="age30s">30대</option>
+                                <option value="40s" data-translate-key="age40s">40대</option>
+                                <option value="50s" data-translate-key="age50s">50대</option>
+                                <option value="60s" data-translate-key="age60s">60대</option>
+                                <option value="70s_plus" data-translate-key="age70s">70대 이상</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label for="gender-select" data-translate-key="genderLabel">성별:</label>
+                            <select name="gender" id="gender-select">
+                                <option value="" data-translate-key="selectOption">-- 선택 --</option>
+                                <option value="male" data-translate-key="genderMale">남성</option>
+                                <option value="female" data-translate-key="genderFemale">여성</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="mbti-input" data-translate-key="mbtiLabel">MBTI:</label>
+                        <input type="text" id="mbti-input" data-translate-key-placeholder="mbtiPlaceholder" placeholder="예) ISTJ, istj" maxlength="4">
+                    </div>
+                </div>
+            </div>
+            <div class="button-container">
+                <button id="start-btn" data-translate-key="startBtn">테스트 시작하기</button>
+            </div>
+        </div>
+
+        <div id="question-page" class="page">
+            <div class="question-container">
+                <div class="progress-text" id="progress-text">1 / 20</div>
+                <div class="progress-bar">
+                    <div class="progress" id="progress"></div>
+                </div>
+                <div id="question-nav" class="question-nav"></div>
+                <div class="question-box">
+                    <h2 id="question-title"><span>Q1.</span> <span>질문 내용이 여기에 표시됩니다.</span></h2>
+                    <img id="question-image" src="https://github.com/ccuvely44/task001/blob/main/images/Image001.jpg?raw=true" alt="질문 이미지" class="question-image">
+                    <div class="options" id="options">
+                    </div>
+                </div>
+                <div class="button-container">
+                    <button id="prev-btn" data-translate-key="prevBtn">&larr; 이전</button>
+                    <button id="home-btn" data-translate-key="homeBtn">홈</button>
+                    <button id="next-btn" data-translate-key="nextBtn">다음 &rarr;</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="result-page" class="page">
+            <div class="result-box">
+                <h2 id="result-title"></h2>
+                <p id="result-subtitle"></p>
+
+                <div class="result-section">
+                    <h3 data-translate-key="analysisTitle">나의 성향 분석</h3>
+                    <div class="percentage-container">
+                        <div id="teto-bar" class="percentage-bar teto-bar"></div>
+                        <div id="egen-bar" class="percentage-bar egen-bar"></div>
+                    </div>
+                    <div class="percentage-labels">
+                        <span data-translate-key="tetoLabel">테토 (Teto)</span>
+                        <span data-translate-key="egenLabel">에겐 (Egen)</span>
+                    </div>
+
+                    <h4 data-translate-key="myKeywordsTitle">나의 핵심태그</h4>
+                    <div id="keyword-container" class="core-keyword-container"></div> 
+
+                    <h4 data-translate-key="myTraitsTitle">나의 성격태그</h4>
+                     <div id="trait-tag-container" class="trait-keyword-container"></div>
+                </div>
+
+                <div class="result-section">
+                    <h3 data-translate-key="compatibleTitle">나와 잘 맞는 성향</h3>
+                    <p id="compatible-type" style="font-size: 1.3rem; font-weight: bold; margin-bottom: 0; text-align: center;"></p>
+
+                    <h4 data-translate-key="compatibleKeywordsTitle">나와 잘 맞는 성향의 핵심태그</h4>
+                     <div id="compatible-keyword-container" class="core-keyword-container"></div>
+
+                    <h4 data-translate-key="compatibleTraitsTitle">나와 잘 맞는 성향의 성격태그</h4>
+                    <div id="compatible-trait-container" class="trait-keyword-container"></div> 
+                </div>
+
+                <div class="result-section">
+                    <h3 id="mbti-section-title" data-translate-key="mbtiTop3Title">이 성향의 MBTI TOP 3</h3>
+                    <div id="mbti-tags" class="mbti-tags"></div>
+                </div>
+
+                <div class="button-container">
+                    <button id="restart-btn" data-translate-key="restartBtn">다시하기</button>
+                </div>
+            </div>
+            
+            <img src="https://github.com/ccuvely44/task001/blob/main/images/KU_Logo_002.jpg?raw=true" id="ku-logo-footer" alt="Kyungnam University">
+            
+            <p id="copyright-text">ⓒ 2025. 백민국, 고유진, 남궁지욱 All rights reserved.</p>
+        </div>
+    </main>
+
+    <div id="warning-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 data-translate-key="modalWarningTitle">잠깐만요!</h3>
+            <p id="modal-message"></p> 
+            <button id="modal-close-btn" data-translate-key="modalCloseBtn">확인</button>
+        </div>
+    </div>
+
+    <div id="loading-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="spinner"></div>
+            <p data-translate-key="loadingText">분석중...</p>
+        </div>
+    </div>
+
+
+    <script>
+        const translations = {
+            'ko': {
+                'pageTitle': '본캐찾기',
+                'languageLabel': '언어:',
+                'mainTitle': '본캐찾기',
+                'ageLabel': '나이:',
+                'genderLabel': '성별:',
+                'mbtiLabel': 'MBTI:',
+                'selectOption': '-- 선택 --',
+                'age10s': '10대', 'age20s': '20대', 'age30s': '30대', 'age40s': '40대', 'age50s': '50대', 'age60s': '60대', 'age70s': '70대 이상',
+                'genderMale': '남성', 'genderFemale': '여성',
+                'mbtiPlaceholder': '예) ISTJ, istj',
+                'startBtn': '테스트 시작하기',
+                'prevBtn': '← 이전',
+                'homeBtn': '홈',
+                'nextBtn': '다음 →',
+                'resultBtn': '결과 보기',
+                'analysisTitle': '나의 성향 분석',
+                'tetoLabel': '테토 (Teto)',
+                'egenLabel': '에겐 (Egen)',
+                'myKeywordsTitle': '나의 핵심태그',
+                'myTraitsTitle': '나의 성격태그',
+                'compatibleTitle': '나와 잘 맞는 성향',
+                'compatibleKeywordsTitle': '나와 잘 맞는 성향의 핵심태그',
+                'compatibleTraitsTitle': '나와 잘 맞는 성향의 성격태그',
+                'mbtiTop3Title': '이 성향의 MBTI TOP 3',
+                'restartBtn': '다시하기',
+                'modalWarningTitle': '잠깐만요!',
+                'modalCloseBtn': '확인',
+                'loadingText': '분석중...',
+                'progressTextFormat': '{current} / {total}',
+                'modalInputWarning': '나이, 성별, MBTI를 모두 입력해주세요!',
+                'modalMbtiWarning': '유효하지 않은 MBTI 유형입니다.\n16가지 유형 중 하나를 정확히 입력해주세요.',
+                'modalUnansweredWarning': '답변하지 않은 질문이 있습니다:\n{questions}',
+                'resultBalanceTitle': '균형잡힌 중재자',
+                'resultBalanceSub': '논리와 감성의 조화를 이루는 균형잡힌 당신.',
+                'resultBalanceComp': '모든 성향과 잘 어울려요!',
+                'resultTetoMaleTitle': '논리적인 분석가, 테토남',
+                'resultTetoMaleSub': '논리와 계획으로 듬직하게 팀을 이끄는 당신.',
+                'resultTetoMaleComp': '따뜻한 공감가, 에겐녀',
+                'resultTetoFemaleTitle': '논리적인 분석가, 테토녀',
+                'resultTetoFemaleSub': '체계적인 사고로 똑 부러지게 문제를 해결하는 당신.',
+                'resultTetoFemaleComp': '따뜻한 공감가, 에겐남',
+                'resultEgenMaleTitle': '따뜻한 공감가, 에겐남',
+                'resultEgenMaleSub': '풍부한 공감 능력으로 주변을 따뜻하게 챙기는 당신.',
+                'resultEgenMaleComp': '논리적인 분석가, 테토녀',
+                'resultEgenFemaleTitle': '따뜻한 공감가, 에겐녀',
+                'resultEgenFemaleSub': '다정한 감수성과 유연한 사고로 소통하는 당신.',
+                'resultEgenFemaleComp': '논리적인 분석가, 테토남',
+                'mbtiCompTitle': '나와 잘 맞는 성향의 MBTI TOP 3',
+                'mbtiSelfTitle': '이 성향의 MBTI TOP 3',
+            },
+            'en': {
+                'pageTitle': 'Find Your Main Character',
+                'languageLabel': 'Language:',
+                'mainTitle': 'Find Your Main Character',
+                'ageLabel': 'Age:',
+                'genderLabel': 'Gender:',
+                'mbtiLabel': 'MBTI:',
+                'selectOption': '-- Select --',
+                'age10s': '10s', 'age20s': '20s', 'age30s': '30s', 'age40s': '40s', 'age50s': '50s', 'age60s': '60s', 'age70s': '70s+',
+                'genderMale': 'Male', 'genderFemale': 'Female',
+                'mbtiPlaceholder': 'e.g.) ISTJ, istj',
+                'startBtn': 'Start Test',
+                'prevBtn': '← Prev',
+                'homeBtn': 'Home',
+                'nextBtn': 'Next →',
+                'resultBtn': 'Show Result',
+                'analysisTitle': 'My Tendency Analysis',
+                'tetoLabel': 'Teto',
+                'egenLabel': 'Egen',
+                'myKeywordsTitle': 'My Core Tags',
+                'myTraitsTitle': 'My Personality Tags',
+                'compatibleTitle': 'Good Match Tendency',
+                'compatibleKeywordsTitle': 'Core Tags of Good Match',
+                'compatibleTraitsTitle': 'Personality Tags of Good Match',
+                'mbtiTop3Title': 'MBTI TOP 3 for This Tendency',
+                'restartBtn': 'Retry',
+                'modalWarningTitle': 'Wait!',
+                'modalCloseBtn': 'OK',
+                'loadingText': 'Analyzing...',
+                'progressTextFormat': '{current} / {total}',
+                'modalInputWarning': 'Please enter your age, gender, and MBTI!',
+                'modalMbtiWarning': 'Invalid MBTI type. Please enter one of the 16 types correctly.',
+                'modalUnansweredWarning': 'There are unanswered questions:\n{questions}',
+                'resultBalanceTitle': 'Balanced Mediator',
+                'resultBalanceSub': 'You are balanced, harmonizing logic and emotion.',
+                'resultBalanceComp': 'Gets along well with all tendencies!',
+                'resultTetoMaleTitle': 'Logical Analyst, Teto Man',
+                'resultTetoMaleSub': 'You lead the team reliably with logic and planning.',
+                'resultTetoMaleComp': 'Warm Empath, Egen Woman',
+                'resultTetoFemaleTitle': 'Logical Analyst, Teto Woman',
+                'resultTetoFemaleSub': 'You solve problems sharply with systematic thinking.',
+                'resultTetoFemaleComp': 'Warm Empath, Egen Man',
+                'resultEgenMaleTitle': 'Warm Empath, Egen Man',
+                'resultEgenMaleSub': 'You warmly care for others with rich empathy.',
+                'resultEgenMaleComp': 'Logical Analyst, Teto Woman',
+                'resultEgenFemaleTitle': 'Warm Empath, Egen Woman',
+                'resultEgenFemaleSub': 'You communicate with gentle sensitivity and flexible thinking.',
+                'resultEgenFemaleComp': 'Logical Analyst, Teto Man',
+                'mbtiCompTitle': 'MBTI TOP 3 for Good Match Tendency',
+                'mbtiSelfTitle': 'MBTI TOP 3 for This Tendency',
+            },
+            'jp': {
+                'pageTitle': '本当の自分探し',
+                'languageLabel': '言語:',
+                'mainTitle': '本当の自分探し',
+                'ageLabel': '年齢:',
+                'genderLabel': '性別:',
+                'mbtiLabel': 'MBTI:',
+                'selectOption': '-- 選択 --',
+                'age10s': '10代', 'age20s': '20代', 'age30s': '30代', 'age40s': '40代', 'age50s': '50代', 'age60s': '60代', 'age70s': '70代以上',
+                'genderMale': '男性', 'genderFemale': '女性',
+                'mbtiPlaceholder': '例) ISTJ, istj',
+                'startBtn': 'テスト開始',
+                'prevBtn': '← 前へ',
+                'homeBtn': 'ホーム',
+                'nextBtn': '次へ →',
+                'resultBtn': '結果を見る',
+                'analysisTitle': '自分の傾向分析',
+                'tetoLabel': 'テト (Teto)',
+                'egenLabel': 'エゲン (Egen)',
+                'myKeywordsTitle': '私のコアタグ',
+                'myTraitsTitle': '私の性格タグ',
+                'compatibleTitle': '相性の良い傾向',
+                'compatibleKeywordsTitle': '相性の良い傾向のコアタグ',
+                'compatibleTraitsTitle': '相性の良い傾向の性格タグ',
+                'mbtiTop3Title': 'この傾向のMBTI TOP 3',
+                'restartBtn': 'やり直す',
+                'modalWarningTitle': 'ちょっと待って！',
+                'modalCloseBtn': '確認',
+                'loadingText': '分析中...',
+                'progressTextFormat': '{current} / {total}',
+                'modalInputWarning': '年齢、性別、MBTIをすべて入力してください！',
+                'modalMbtiWarning': '無効なMBTIタイプです。16タイプの中から正確に入力してください。',
+                'modalUnansweredWarning': '未回答の質問があります:\n{questions}',
+                'resultBalanceTitle': 'バランスの取れた仲介者',
+                'resultBalanceSub': '論理と感性の調和がとれた、バランスの取れたあなた。',
+                'resultBalanceComp': 'すべての傾向と仲良くできます！',
+                'resultTetoMaleTitle': '論理的な分析家、テト男',
+                'resultTetoMaleSub': '論理と計画で頼もしくチームを率いるあなた。',
+                'resultTetoMaleComp': '温かい共感者、エゲン女',
+                'resultTetoFemaleTitle': '論理的な分析家、テト女',
+                'resultTetoFemaleSub': '体系的な思考できっぱりと問題を解決するあなた。',
+                'resultTetoFemaleComp': '温かい共感者、エゲン男',
+                'resultEgenMaleTitle': '温かい共感者、エゲン男',
+                'resultEgenMaleSub': '豊かな共感能力で周りを温かく気遣うあなた。',
+                'resultEgenMaleComp': '論理的な分析家、テト女',
+                'resultEgenFemaleTitle': '温かい共感者、エゲン女',
+                'resultEgenFemaleSub': '優しい感受性と柔軟な思考でコミュニケーションするあなた。',
+                'resultEgenFemaleComp': '論理的な分析家、テト男',
+                'mbtiCompTitle': '相性の良い傾向のMBTI TOP 3',
+                'mbtiSelfTitle': 'この傾向のMBTI TOP 3',
+            },
+            'cn': {
+                'pageTitle': '寻找真我',
+                'languageLabel': '语言:',
+                'mainTitle': '寻找真我',
+                'ageLabel': '年龄:',
+                'genderLabel': '性别:',
+                'mbtiLabel': 'MBTI:',
+                'selectOption': '-- 选择 --',
+                'age10s': '10多岁', 'age20s': '20多岁', 'age30s': '30多岁', 'age40s': '40多岁', 'age50s': '50多岁', 'age60s': '60多岁', 'age70s': '70岁以上',
+                'genderMale': '男性', 'genderFemale': '女性',
+                'mbtiPlaceholder': '例) ISTJ, istj',
+                'startBtn': '开始测试',
+                'prevBtn': '← 上一页',
+                'homeBtn': '主页',
+                'nextBtn': '下一页 →',
+                'resultBtn': '查看结果',
+                'analysisTitle': '我的倾向分析',
+                'tetoLabel': '泰托 (Teto)',
+                'egenLabel': '艾根 (Egen)',
+                'myKeywordsTitle': '我的核心标签',
+                'myTraitsTitle': '我的性格标签',
+                'compatibleTitle': '合拍的倾向',
+                'compatibleKeywordsTitle': '合拍倾向的核心标签',
+                'compatibleTraitsTitle': '合拍倾向的性格标签',
+                'mbtiTop3Title': '此倾向的 MBTI TOP 3',
+                'restartBtn': '重新开始',
+                'modalWarningTitle': '请稍等！',
+                'modalCloseBtn': '确认',
+                'loadingText': '分析中...',
+                'progressTextFormat': '{current} / {total}',
+                'modalInputWarning': '请输入年龄、性别和 MBTI！',
+                'modalMbtiWarning': '无效的 MBTI 类型。请输入 16 种类型中的一种。',
+                'modalUnansweredWarning': '有未回答的问题：\n{questions}',
+                'resultBalanceTitle': '平衡的调解者',
+                'resultBalanceSub': '平衡的你，协调逻辑与情感。',
+                'resultBalanceComp': '与所有倾向都能很好地相处！',
+                'resultTetoMaleTitle': '逻辑分析者，泰托男',
+                'resultTetoMaleSub': '你用逻辑和计划可靠地领导团队。',
+                'resultTetoMaleComp': '温暖的共情者，艾根女',
+                'resultTetoFemaleTitle': '逻辑分析者，泰托女',
+                'resultTetoFemaleSub': '你用系统性思维清晰地解决问题。',
+                'resultTetoFemaleComp': '温暖的共情者，艾根男',
+                'resultEgenMaleTitle': '温暖的共情者，艾根男',
+                'resultEgenMaleSub': '你以丰富的同情心温暖地关心他人。',
+                'resultEgenMaleComp': '逻辑分析者，泰托女',
+                'resultEgenFemaleTitle': '温暖的共情者，艾根女',
+                'resultEgenFemaleSub': '你以温柔的敏感性和灵活的思维进行沟通。',
+                'resultEgenFemaleComp': '逻辑分析者，泰托男',
+                'mbtiCompTitle': '合拍倾向的 MBTI TOP 3',
+                'mbtiSelfTitle': '此倾向的 MBTI TOP 3',
+            }
+        };
+
+        const allQuestions = [
+            {
+                id: 'q1',
+                image: "https://github.com/ccuvely44/task001/blob/main/images/Image001.jpg?raw=true",
+                type: 'Egen',
+                ko: "나는 새로운 사람들을 만나는 것을 즐긴다.",
+                en: "I enjoy meeting new people.",
+                jp: "新しい人に会うことを楽しむ。",
+                cn: "我喜欢认识新朋友。"
+            },
+            {
+                id: 'q2', image: "https://github.com/ccuvely44/task001/blob/main/images/Image002.jpg?raw=true", type: 'Egen',
+                ko: "나는 파티나 모임에서 중심에 있는 것을 좋아한다.",
+                en: "I like being the center of attention at parties or gatherings.",
+                jp: "パーティーや集まりで中心にいるのが好きだ。",
+                cn: "我喜欢在聚会或集会中成为焦点。"
+            },
+            { id: 'q3', image: "https://github.com/ccuvely44/task001/blob/main/images/Image003.jpg?raw=true", type: 'Egen', ko: "나는 분위기를 띄우기 위해 농담이나 재미있는 이야기를 자주 하는 편이다.", en: "I often tell jokes or funny stories to liven up the mood.", jp: "雰囲気を盛り上げるために冗談や面白い話をよくする方だ。", cn: "我经常讲笑话或有趣的故事来活跃气氛。" },
+            { id: 'q4', image: "https://github.com/ccuvely44/task001/blob/main/images/Image004.jpg?raw=true", type: 'Egen', ko: "나는 팀 프로젝트에서 리더 역할을 맡는 것을 선호한다.", en: "I prefer to take on a leadership role in team projects.", jp: "チームプロジェクトでリーダー役を務めることを好む。", cn: "我更喜欢在团队项目中担任领导角色。" },
+            { id: 'q5', image: "https://github.com/ccuvely44/task001/blob/main/images/Image005.jpg?raw=true", type: 'Egen', ko: "나는 다른 사람에게 도움을 요청하는 것을 주저하지 않는다.", en: "I don't hesitate to ask others for help.", jp: "他の人に助けを求めることをためらわない。", cn: "我毫不犹豫地向他人寻求帮助。" },
+            { id: 'q6', image: "https://github.com/ccuvely44/task001/blob/main/images/Image006.jpg?raw=true", type: 'Egen', ko: "나는 종종 다른 사람의 감정에 깊이 공감한다.", en: "I often deeply empathize with others' feelings.", jp: "他の人の感情に深く共感することがよくある。", cn: "我常常能深刻地体会到别人的感受。" },
+            { id: 'q7', image: "https://github.com/ccuvely44/task001/blob/main/images/Image007.jpg?raw=true", type: 'Egen', ko: "다른 사람의 행복을 위해 나의 시간을 기꺼이 사용한다.", en: "I willingly use my time for the happiness of others.", jp: "他の人の幸せのために自分の時間を使うことをいとわない。", cn: "我愿意为别人的幸福付出我的时间。" },
+            { id: 'q8', image: "https://github.com/ccuvely44/task001/blob/main/images/Image008.jpg?raw=true", type: 'Egen', ko: "나는 예술 작품이나 자연의 아름다움에 쉽게 감동받는다.", en: "I am easily moved by works of art or the beauty of nature.", jp: "芸術作品や自然の美しさに感動しやすい。", cn: "我很容易被艺术品或自然之美所打动。" },
+            { id: 'q9', image: "https://github.com/ccuvely44/task001/blob/main/images/Image009.jpg?raw=true", type: 'Egen', ko: "슬픈 영화나 드라마를 보면 눈물이 나는 경우가 많다.", en: "I often cry when watching sad movies or dramas.", jp: "悲しい映画やドラマを見ると涙が出ることが多い。", cn: "看悲伤的电影或电视剧时，我常常会哭。" },
+            { id: 'q10', image: "https://github.com/ccuvely44/task001/blob/main/images/Image010.jpg?raw=true", type: 'Egen', ko: "나는 나의 감정을 다른 사람에게 표현하는 것이 어렵지 않다.", en: "It is not difficult for me to express my emotions to others.", jp: "自分の感情を他の人に表現するのは難しくない。", cn: "向别人表达我的情感对我来说并不难。" },
+            { id: 'q11', image: "https://github.com/ccuvely44/task001/blob/main/images/Image011.jpg?raw=true", type: 'Egen', ko: "나는 다른 사람을 칭찬하는 데 인색하지 않다.", en: "I am not stingy with praising others.", jp: "他人を褒めることにけちではない。", cn: "我不吝于赞美他人。" },
+            { id: 'q12', image: "https://github.com/ccuvely44/task001/blob/main/images/Image012.jpg?raw=true", type: 'Egen', ko: "나는 다른 사람의 부탁을 거절하는 것을 어려워한다.", en: "I find it difficult to refuse others' requests.", jp: "他人の頼みを断るのが難しい。", cn: "我很难拒绝别人的请求。" },
+            { id: 'q13', image: "https://github.com/ccuvely44/task001/blob/main/images/Image013.jpg?raw=true", type: 'Egen', ko: "나는 다른 사람의 성공에 진심으로 기뻐할 수 있다.", en: "I can genuinely rejoice in others' success.", jp: "他人の成功を心から喜ぶことができる。", cn: "我能真诚地为别人的成功感到高兴。" },
+            { id: 'q14', image: "https://github.com/ccuvely44/task001/blob/main/images/Image014.jpg?raw=true", type: 'Egen', ko: "나는 나의 직감을 믿고 행동하는 경우가 많다.", en: "I often trust my intuition and act on it.", jp: "自分の直感を信じて行動することが多い。", cn: "我经常相信并凭直觉行事。" },
+            { id: 'q15', image: "https://github.com/ccuvely44/task001/blob/main/images/Image015.jpg?raw=true", type: 'Egen', ko: "나는 기념일이나 특별한 날을 챙기는 것을 중요하게 생각한다.", en: "I consider it important to celebrate anniversaries or special days.", jp: "記念日や特別な日を祝うことを重要だと考える。", cn: "我认为庆祝周年纪念日或特殊日子很重要。" },
+            { id: 'q16', image: "https://github.com/ccuvely44/task001/blob/main/images/Image016.jpg?raw=true", type: 'Egen', ko: "나는 갑작스러운 계획 변경에도 유연하게 대처할 수 있다.", en: "I can flexibly cope with sudden changes in plans.", jp: "突然の計画変更にも柔軟に対応できる。", cn: "我能灵活应对计划的突然变化。" },
+            { id: 'q17', image: "https://github.com/ccuvely44/task001/blob/main/images/Image017.jpg?raw=true", type: 'Egen', ko: "나는 위험을 감수하더라도 새로운 도전을 하는 것을 즐긴다.", en: "I enjoy taking on new challenges, even if it involves risks.", jp: "リスクを冒してでも新しい挑戦を楽しむ。", cn: "我喜欢接受新的挑战，即使有风险。" },
+            { id: 'q18', image: "https://github.com/ccuvely44/task001/blob/main/images/Image018.jpg?raw=true", type: 'Egen', ko: "새로운 기기를 샀을 때, 설명서를 읽기보다 일단 직접 사용해보는 편이다.", en: "When I buy a new device, I tend to try using it first rather than reading the manual.", jp: "新しい機器を買ったとき、説明書を読むよりもまず使ってみる方だ。", cn: "当我购买新设备时，我倾向于先尝试使用它，而不是阅读手册。" },
+            { id: 'q19', image: "https://github.com/ccuvely44/task001/blob/main/images/Image019.jpg?raw=true", type: 'Egen', ko: "나는 결과보다는 과정이 더 중요하다고 생각한다.", en: "I think the process is more important than the result.", jp: "結果よりもプロセスが重要だと思う。", cn: "我认为过程比结果更重要。" },
+            { id: 'q20', image: "https://github.com/ccuvely44/task001/blob/main/images/Image020.jpg?raw=true", type: 'Egen', ko: "나는 모르는 것이 있으면 즉시 질문하거나 찾아보는 편이다.", en: "If I don't know something, I tend to ask or look it up immediately.", jp: "知らないことがあれば、すぐに質問したり調べたりする方だ。", cn: "如果我不知道某件事，我倾向于立即询问或查找。" },
+            { id: 'q21', image: "https://github.com/ccuvely44/task001/blob/main/images/Image021.jpg?raw=true", type: 'Egen', ko: "나는 새로운 아이디어나 추상적인 개념에 대해 생각하는 것을 즐긴다.", en: "I enjoy thinking about new ideas or abstract concepts.", jp: "新しいアイデアや抽象的な概念について考えることを楽しむ。", cn: "我喜欢思考新的想法或抽象的概念。" },
+            { id: 'q22', image: "https://github.com/ccuvely44/task001/blob/main/images/Image022.jpg?raw=true", type: 'Egen', ko: "나는 패션이나 스타일에 관심이 많은 편이다.", en: "I am quite interested in fashion or style.", jp: "ファッションやスタイルにかなり関心がある方だ。", cn: "我对时尚或风格很感兴趣。" },
+            { id: 'q23', image: "https://github.com/ccuvely44/task001/blob/main/images/Image023.jpg?raw=true", type: 'Egen', ko: "나는 복잡한 문제의 본질을 파악하는 것을 즐긴다.", en: "I enjoy grasping the essence of complex problems.", jp: "複雑な問題の本質を把握することを楽しむ。", cn: "我喜欢抓住复杂问题的本质。" },
+            { id: 'q24', image: "https://github.com/ccuvely44/task001/blob/main/images/Image024.jpg?raw=true", type: 'Egen', ko: "나는 영화를 볼 때 스토리보다 영상미를 더 중요하게 생각한다.", en: "When watching movies, I consider the cinematography more important than the story.", jp: "映画を見るとき、ストーリーよりも映像美を重要視する。", cn: "看电影时，我认为摄影比故事情节更重要。" },
+            { id: 'q25', image: "https://github.com/ccuvely44/task001/blob/main/images/Image025.jpg?raw=true", type: 'Egen', ko: "나는 사람들과의 약속을 중요하게 생각한다.", en: "I consider promises with people important.", jp: "人との約束を重要だと考える。", cn: "我认为与人约定很重要。" },
+
+            {
+                id: 'q26',
+                image: "https://github.com/ccuvely44/task001/blob/main/images/Image026.jpg?raw=true",
+                type: 'Teto',
+                ko: "나는 단체 활동보다 혼자 하는 활동이 더 편안하다.",
+                en: "I feel more comfortable doing activities alone than in a group.",
+                jp: "団体活動より一人でする活動の方が楽だ。",
+                cn: "比起集体活动，我更喜欢独自活动。"
+            },
+            { id: 'q27', image: "https://github.com/ccuvely44/task001/blob/main/images/Image027.jpg?raw=true", type: 'Teto', ko: "나는 여러 사람과 어울리기보다 소수의 깊은 관계를 선호한다.", en: "I prefer a few deep relationships over mingling with many people.", jp: "多くの人と付き合うより、少数の深い関係を好む。", cn: "比起和很多人交往，我更喜欢少数深厚的关系。" },
+            { id: 'q28', image: "https://github.com/ccuvely44/task001/blob/main/images/Image028.jpg?raw=true", type: 'Teto', ko: "나는 대화 중에 침묵이 흘러도 불편하지 않다.", en: "I don't feel uncomfortable if there is silence during a conversation.", jp: "会話中に沈黙が流れても不快ではない。", cn: "即使谈话中出现沉默，我也不会感到不舒服。" },
+            { id: 'q29', image: "https://github.com/ccuvely44/task001/blob/main/images/Image029.jpg?raw=true", type: 'Teto', ko: "나는 혼자만의 시간을 갖는 것이 재충전에 꼭 필요하다.", en: "Having time alone is essential for me to recharge.", jp: "一人だけの時間を持つことが、再充電には不可欠だ。", cn: "独处时间对我来说是充电所必需的。" },
+            { id: 'q30', image: "https://github.com/ccuvely44/task001/blob/main/images/Image030.jpg?raw=true", type: 'Teto', ko: "나는 갈등이 생겼을 때, 직접 부딪혀 해결하려는 편이다.", en: "When conflict arises, I tend to face it directly to resolve it.", jp: "対立が生じたとき、直接ぶつかって解決しようとする方だ。", cn: "当发生冲突时，我倾向于直接面对并解决它。" },
+            { id: 'q31', image: "https://github.com/ccuvely44/task001/blob/main/images/Image031.jpg?raw=true", type: 'Teto', ko: "나는 사소한 일에 감정적으로 동요하지 않는 편이다.", en: "I tend not to get emotionally swayed by trivial matters.", jp: "些細なことに感情的に動揺しない方だ。", cn: "我倾向于不被琐碎的事情情绪化。" },
+            { id: 'q32', image: "https://github.com/ccuvely44/task001/blob/main/images/Image032.jpg?raw=true", type: 'Teto', ko: "나는 종종 미래에 대해 걱정하기보다 현재에 집중한다.", en: "I often focus on the present rather than worrying about the future.", jp: "未来について心配するより、現在に集中することが多い。", cn: "我常常专注于当下，而不是担心未来。" },
+            { id: 'q33', image: "https://github.com/ccuvely44/task001/blob/main/images/Image033.jpg?raw=true", type: 'Teto', ko: "나는 과거의 실수에 대해 오랫동안 생각하지 않으려 한다.", en: "I try not to dwell on past mistakes for a long time.", jp: "過去の過ちについて長く考えないようにしている。", cn: "我尽量不长时间纠结于过去的错误。" },
+            { id: 'q34', image: "https://github.com/ccuvely44/task001/blob/main/images/Image034.jpg?raw=true", type: 'Teto', ko: "문제가 발생하면 감정적으로 대처하기보다 차분하게 분석하는 편이다.", en: "When a problem occurs, I tend to analyze it calmly rather than reacting emotionally.", jp: "問題が発生すると、感情的に対処するよりも冷静に分析する方だ。", cn: "当问题发生时，我倾向于冷静分析而不是情绪化反应。" },
+            { id: 'q35', image: "https://github.com/ccuvely44/task001/blob/main/images/Image035.jpg?raw=true", type: 'Teto', ko: "나는 힘든 일이 있어도 긍정적인 태도를 유지하려고 노력한다.", en: "Even when things are tough, I try to maintain a positive attitude.", jp: "困難なことがあっても、前向きな姿勢を保とうと努力する。", cn: "即使遇到困难，我也努力保持积极的态度。" },
+            { id: 'q36', image: "https://github.com/ccuvely44/task001/blob/main/images/Image036.jpg?raw=true", type: 'Teto', ko: "나는 계획을 세우고 그것을 따르는 것을 좋아한다.", en: "I like to make plans and follow them.", jp: "計画を立ててそれに従うのが好きだ。", cn: "我喜欢制定计划并遵循它。" },
+            { id: 'q37', image: "https://github.com/ccuvely44/task001/blob/main/images/Image037.jpg?raw=true", type: 'Teto', ko: "나는 내 방이나 책상을 항상 깔끔하게 정리해 둔다.", en: "I always keep my room or desk tidy.", jp: "自分の部屋や机をいつもきれいに整理しておく。", cn: "我总是把我的房间或书桌收拾得整整齐齐。" },
+            { id: 'q38', image: "https://github.com/ccuvely44/task001/blob/main/images/Image038.jpg?raw=true", type: 'Teto', ko: "나는 결정을 내릴 때, 논리적인 근거를 중요하게 생각한다.", en: "When making decisions, I prioritize logical reasoning.", jp: "決定を下すとき、論理的な根拠を重要視する。", cn: "做决定时，我优先考虑逻辑依据。" },
+            { id: 'q39', image: "https://github.com/ccuvely44/task001/blob/main/images/Image039.jpg?raw=true", type: 'Teto', ko: "나는 쇼핑할 때, 디자인보다 실용성을 더 중요하게 생각한다.", en: "When shopping, I consider practicality more important than design.", jp: "買い物をするとき、デザインよりも実用性を重要視する。", cn: "购物时，我认为实用性比设计更重要。" },
+            { id: 'q40', image: "https://github.com/ccuvely44/task001/blob/main/images/Image040.jpg?raw=true", type: 'Teto', ko: "어떤 일이든 시작하기 전에 여러 가능성을 충분히 고려한다.", en: "Before starting anything, I thoroughly consider various possibilities.", jp: "何事を始める前にも、様々な可能性を十分に考慮する。", cn: "在开始做任何事情之前，我都会充分考虑各种可能性。" },
+            { id: 'q41', image: "https://github.com/ccuvely44/task001/blob/main/images/Image041.jpg?raw=true", type: 'Teto', ko: "나는 한 번에 한 가지 일에 집중하는 것을 더 잘한다.", en: "I am better at focusing on one task at a time.", jp: "一度に一つのことに集中する方が得意だ。", cn: "我更擅长一次专注于一项任务。" },
+            { id: 'q42', image: "https://github.com/ccuvely44/task001/blob/main/images/Image042.jpg?raw=true", type: 'Teto', ko: "나는 효율성과 생산성을 중요하게 생각한다.", en: "I consider efficiency and productivity important.", jp: "効率性と生産性を重要だと考える。", cn: "我认为效率和生产力很重要。" },
+            { id: 'q43', image: "https://github.com/ccuvely44/task001/blob/main/images/Image043.jpg?raw=true", type: 'Teto', ko: "나는 목표를 달성하기 위해 체계적으로 접근한다.", en: "I approach achieving goals systematically.", jp: "目標を達成するために体系的にアプローチする。", cn: "我系统地实现目标。" },
+            { id: 'q44', image: "https://github.com/ccuvely44/task001/blob/main/images/Image044.jpg?raw=true", type: 'Teto', ko: "나는 규칙이나 절차를 따르는 것이 편안하다.", en: "I feel comfortable following rules or procedures.", jp: "規則や手順に従うのが快適だ。", cn: "我喜欢遵守规则或程序。" },
+            { id: 'q45', image: "https://github.com/ccuvely44/task001/blob/main/images/Image045.jpg?raw=true", type: 'Teto', ko: "나는 돈이나 시간을 관리하는 데 능숙하다.", en: "I am skilled at managing money or time.", jp: "お金や時間を管理するのが得意だ。", cn: "我擅长管理金钱或时间。" },
+            { id: 'q46', image: "https://github.com/ccuvely44/task001/blob/main/images/Image046.jpg?raw=true", type: 'Teto', ko: "나는 경쟁에서 이기는 것에서 큰 성취감을 느낀다.", en: "I feel a great sense of accomplishment from winning in competitions.", jp: "競争に勝つことから大きな達成感を感じる。", cn: "我在竞争中获胜会感到巨大的成就感。" },
+            { id: 'q47', image: "https://github.com/ccuvely44/task001/blob/main/images/Image047.jpg?raw=true", type: 'Teto', ko: "나는 대화할 때 사실과 정보를 기반으로 이야기하는 것을 선호한다.", en: "When conversing, I prefer to talk based on facts and information.", jp: "会話するとき、事実と情報に基づいて話すことを好む。", cn: "交谈时，我更喜欢根据事实和信息说话。" },
+            { id: 'q48', image: "https://github.com/ccuvely44/task001/blob/main/images/Image048.jpg?raw=true", type: 'Teto', ko: "나는 감성적인 선물보다 실용적인 선물을 더 선호한다.", en: "I prefer practical gifts over sentimental ones.", jp: "感性的な贈り物よりも実用的な贈り物を好む。", cn: "我更喜欢实用的礼物，而不是感性的礼物。" },
+            { id: 'q49', image: "https://github.com/ccuvely44/task001/blob/main/images/Image049.jpg?raw=true", type: 'Teto', ko: "나는 다른 사람의 의견에 쉽게 동의하기보다 비판적으로 검토하는 편이다.", en: "I tend to critically review others' opinions rather than easily agreeing.", jp: "他人の意見に簡単に同意するより、批判的に検討する方だ。", cn: "我倾向于批判性地审查他人的意见，而不是轻易同意。" },
+            { id: 'q50', image: "https://github.com/ccuvely44/task001/blob/main/images/Image050.jpg?raw=true", type: 'Teto', ko: "나는 토론에서 내 주장을 논리적으로 방어하는 것을 잘한다.", en: "I am good at logically defending my arguments in a discussion.", jp: "討論で自分の主張を論理的に防御するのが得意だ。", cn: "我擅长在讨论中逻辑地捍卫我的论点。" },
+    ];
+
+        const optionsData = [
+            { value: 1, ko: "매우 그렇지 않다", en: "Strongly Disagree", jp: "全くそう思わない", cn: "非常不同意" },
+            { value: 2, ko: "그렇지 않다", en: "Disagree", jp: "そう思わない", cn: "不同意" },
+            { value: 3, ko: "보통이다", en: "Neutral", jp: "どちらでもない", cn: "中立" },
+            { value: 4, ko: "그렇다", en: "Agree", jp: "そう思う", cn: "同意" },
+            { value: 5, ko: "매우 그렇다", en: "Strongly Agree", jp: "強くそう思う", cn: "非常同意" }
+    ];
+
+        const validMbtiTypes = [
+            'istj', 'istp', 'isfj', 'isfp', 'intj', 'intp', 'infj', 'infp',
+            'estj', 'estp', 'esfj', 'esfp', 'entj', 'entp', 'enfj', 'enfp'
+    ];
+
+        const resultKeywords = {
+             Balance: { ko: ['#합리적인', '#균형잡힌', '#유연한', '#포용력있는', '#평화주의'], en: ['#Rational', '#Balanced', '#Flexible', '#Inclusive', '#Pacifist'], jp: ['#合理的', '#バランスの取れた', '#柔軟な', '#包容力のある', '#平和主義'], cn: ['#合理的', '#均衡的', '#灵活的', '#包容的', '#和平主义'] },
+             TetoMale: { ko: ['#논리적인', '#계획적인', '#현실적인', '#분석적인', '#원칙주의'], en: ['#Logical', '#Planner', '#Realistic', '#Analytical', '#Principled'], jp: ['#論理的', '#計画的', '#現実的', '#分析的', '#原則主義'], cn: ['#逻辑的', '#计划性的', '#现实的', '#分析性的', '#原则主义'] },
+             TetoFemale: { ko: ['#논리적인', '#체계적인', '#똑부러지는', '#효율적인', '#완벽주의'], en: ['#Logical', '#Systematic', '#Sharp', '#Efficient', '#Perfectionist'], jp: ['#論理的', '#体系的', '#しっかり者', '#効率的', '#完璧主義'], cn: ['#逻辑的', '#系统性的', '#精明的', '#有效率的', '#完美主义'] },
+             EgenMale: { ko: ['#다정한', '#사교적인', '#유쾌한', '#공감하는', '#낙천주의'], en: ['#Affectionate', '#Sociable', '#Cheerful', '#Empathetic', '#Optimistic'], jp: ['#優しい', '#社交的', '#愉快な', '#共感的', '#楽観主義'], cn: ['#亲切的', '#社交的', '#愉快的', '#有同理心的', '#乐观主义'] },
+             EgenFemale: { ko: ['#감성적인', '#따뜻한', '#관계지향적', '#창의적인', '#낭만주의'], en: ['#Emotional', '#Warm', '#Relationship-oriented', '#Creative', '#Romantic'], jp: ['#感性的', '#温かい', '#関係志向', '#創造的', '#ロマン主義'], cn: ['#感性的', '#温暖的', '#关系导向的', '#创造性的', '#浪漫主义'] }
+    };
+
+        const resultTraits = {
+             Balance: {
+                 ko: ['#논리와 감성의 조화를 이루는 균형잡힌 성향입니다.', '#상황에 따라 유연하게 대처하는 합리적인 중재자입니다.', '#갈등을 싫어하며 평화로운 관계를 중요하게 생각합니다.', '#양쪽의 의견을 모두 경청하는 포용력을 가졌습니다.', '#다양한 관점을 이해하려 노력하는 성격입니다.'],
+                 en: ['#A balanced tendency that harmonizes logic and emotion.', '#A rational mediator who flexibly copes with situations.', '#Dislikes conflict and values peaceful relationships.', '#Has the inclusiveness to listen to both sides.', '#A personality that tries to understand various perspectives.'],
+                 jp: ['#論理と感性の調和がとれたバランスの取れた性向です。', '#状況に応じて柔軟に対応する合理的な仲裁者です。', '#対立を嫌い、平和な関係を重視します。', '#両方の意見に耳を傾ける包容力を持っています。', '#多様な観点を理解しようと努める性格です。'],
+                 cn: ['#平衡逻辑与情感的均衡倾向。', '#根据情况灵活应对的合理调解者。', '#不喜欢冲突，重视和平关系。', '#具有倾听双方意见的包容力。', '#努力理解各种观点的性格。']
+             },
+             TetoMale: {
+                 ko: ['#논리와 계획으로 듬직하게 팀을 이끄는 성격입니다.', '#감정 표현보다는 현실적인 해결책을 제시합니다.', '#원칙을 중요시하며 체계적으로 접근하는 것을 선호합니다.', '#목표 지향적이며 효율성을 중요하게 생각합니다.', '#사실에 기반한 명확한 커뮤니케이션을 합니다.'],
+                 en: ['#A personality that reliably leads the team with logic and planning.', '#Presents realistic solutions rather than emotional expressions.', '#Values principles and prefers a systematic approach.', '#Goal-oriented and values efficiency.', '#Communicates clearly based on facts.'],
+                 jp: ['#論理と計画で頼もしくチームを率いる性格です。', '#感情表現よりも現実的な解決策を提示します。', '#原則を重視し、体系的にアプローチすることを好みます。', '#目標志向であり、効率性を重視します。', '#事実に基づいた明確なコミュニケーションをします。'],
+                 cn: ['#以逻辑和计划可靠地领导团队的性格。', '#提出实际解决方案而非情感表达。', '#重视原则，喜欢系统性方法。', '#目标导向，重视效率。', '#基于事实进行清晰沟通。']
+             },
+             TetoFemale: {
+                 ko: ['#체계적인 사고로 똑 부러지게 문제를 해결하는 성격입니다.', '#감정적인 동요 없이 이성적으로 판단하는 능력이 뛰어납니다.', '#효율성을 중시하며 완벽하게 일을 처리하려 합니다.', '#명확한 기준과 논리적인 근거를 중요하게 생각합니다.', '#현실적인 감각으로 안정적인 삶을 추구합니다.'],
+                 en: ['#A personality that sharply solves problems with systematic thinking.', '#Excellent ability to judge rationally without emotional sway.', '#Values efficiency and strives for perfection in handling tasks.', '#Values clear standards and logical grounds.', '#Pursues a stable life with a realistic sense.'],
+                 jp: ['#体系的な思考できっぱりと問題を解決する性格です。', '#感情的な動揺なしに理性的に判断する能力が優れています。', '#効率性を重視し、完璧に仕事を処理しようとします。', '#明確な基準と論理的な根拠を重要視します。', '#現実的な感覚で安定した生活を追求します。'],
+                 cn: ['#以系统性思维清晰解决问题的性格。', '#具有不受情绪影响而理性判断的出色能力。', '#重视效率，力求完美处理事务。', '#重视明确标准和逻辑依据。', '#以现实感追求稳定的生活。']
+             },
+             EgenMale: {
+                 ko: ['#풍부한 공감 능력으로 주변을 따뜻하게 챙기는 성격입니다.', '#다정하고 사교적이며 유쾌한 성격으로 분위기를 주도합니다.', '#규칙보다는 유연한 사고로 상황에 대처합니다.', '#사람들과의 관계를 중요시하는 낙천주의자입니다.', '#새로운 경험과 도전을 즐기는 긍정적인 성향입니다.'],
+                 en: ['#A personality that warmly cares for others with rich empathy.', '#Leads the mood with an affectionate, sociable, and cheerful personality.', '#Copes with situations with flexible thinking rather than rules.', '#An optimist who values relationships with people.', '#A positive tendency that enjoys new experiences and challenges.'],
+                 jp: ['#豊かな共感能力で周りを温かく気遣う性格です。', '#優しく社交的で愉快な性格で雰囲気を主導します。', '#規則よりも柔軟な思考で状況に対処します。', '#人との関係を重視する楽天主義者です。', '#新しい経験と挑戦を楽しむ肯定的な性向です。'],
+                 cn: ['#以丰富的同情心温暖关心他人的性格。', '#以亲切、社交、愉快的性格主导氛围。', '#以灵活思维而非规则应对情况。', '#重视人际关系的乐观主义者。', '#享受新体验和挑战的积极倾向。']
+             },
+             EgenFemale: {
+                 ko: ['#다정한 감수성과 유연한 사고로 소통하는 성격입니다.', '#타인의 감정을 잘 읽어내고 깊이 공감하는 능력이 뛰어납니다.', '#관계 지향적이며 주변 사람들에게 따뜻한 지지를 보냅니다.', '#창의적인 아이디어가 많고 미적 감각이 뛰어납니다.', '#낭만적인 것을 좋아하며 감정 표현에 솔직한 편입니다.'],
+                 en: ['#A personality that communicates with gentle sensitivity and flexible thinking.', '#Excellent ability to read others\' emotions and empathize deeply.', '#Relationship-oriented and sends warm support to those around.', '#Has many creative ideas and excellent aesthetic sense.', '#Likes romantic things and is honest in expressing emotions.'],
+                 jp: ['#優しい感受性と柔軟な思考でコミュニケーションする性格です。', '#他人の感情をよく読み取り、深く共感する能力が優れています。', '#関係志向であり、周りの人々に温かい支持を送ります。', '#創造的なアイデアが多く、美的感覚が優れています。', '#ロマンチックなことが好きで、感情表現に率直な方です。'],
+                 cn: ['#以温柔的敏感性和灵活的思维沟通的性格。', '#具有出色解读他人情感并深刻共情的能力。', '#关系导向，向周围人传递温暖支持。', '#创意丰富，审美感出众。', '#喜欢浪漫事物，在表达情感方面很坦诚。']
+             }
+    };
+
+        const realisticMbtiData = {
+            TetoMale: ['ENFP', 'ESFP', 'ESFJ'],
+            TetoFemale: ['INFP', 'ENFJ', 'ISFP'],
+            EgenMale: ['ISTJ', 'ESTJ', 'ENTJ'],
+            EgenFemale: ['INTJ', 'ISTP', 'INTP'],
+            Balance: ['ISTP', 'ENFJ', 'ISFJ']
+    };
+
+        const mbtiDescriptions = {
+             'ISTJ': { ko: '신중하고 현실적이며, 원리원칙을 중요시하는 믿음직한 책임자입니다.', en: 'A reliable logistician who is prudent, realistic, and values principles.', jp: '慎重で現実的、原理原則を重視する信頼できる責任者です。', cn: '谨慎、现实，重视原则，是可靠的后勤人员。' },
+             'INTJ': { ko: '높은 지능과 통찰력을 바탕으로 장기적인 전략을 수립하는 뛰어난 설계자입니다.', en: 'An excellent architect who establishes long-term strategies based on high intelligence and insight.', jp: '高い知性と洞察力をもとに長期的な戦略を立てる優れた設計者です。', cn: '基于高智商和洞察力制定长期战略的杰出建筑师。' },
+             'ESTJ': { ko: '체계적이고 논리적이며, 목표 달성을 위해 팀을 효율적으로 이끄는 카리스마 있는 리더입니다.', en: 'A charismatic leader who is systematic, logical, and efficiently leads the team to achieve goals.', jp: '体系的で論理的、目標達成のためにチームを効率的に率いるカリスマ的なリーダーです。', cn: '系统、逻辑性强，为实现目标而高效领导团队的魅力型领导者。' },
+             'ISTP': { ko: '조용하고 관찰력이 뛰어나며, 기계나 도구를 다루는 데 재능이 있는 만능 재주꾼입니다.', en: 'A versatile virtuoso who is quiet, observant, and talented at handling machines or tools.', jp: '静かで observación力に優れ、機械や道具を扱う才能がある万能の職人です。', cn: '安静、观察力强，擅长操作机器或工具的全能工匠。' },
+             'INTP': { ko: '끊임없이 탐구하고 분석하며, 복잡한 문제에 대한 논리적인 해결책을 찾아내는 지적 탐험가입니다.', en: 'An intellectual logician who constantly explores, analyzes, and finds logical solutions to complex problems.', jp: '絶えず探求し分析し、複雑な問題に対する論理的な解決策を見つけ出す知的探求者です。', cn: '不断探索、分析，为复杂问题寻找逻辑解决方案的智性逻辑学家。' },
+             'ISFJ': { ko: '배려심이 깊고 헌신적이며, 조용히 주변 사람들을 돕는 따뜻한 마음의 수호자입니다.', en: 'A warm-hearted defender who is considerate, devoted, and quietly helps those around.', jp: '思いやり深く献身的で、静かに周りの人々を助ける温かい心の守護者です。', cn: '体贴、忠诚，默默帮助周围人的温暖守护者。' },
+             'INFP': { ko: '이상주의적이고 상상력이 풍부하며, 진정한 가치를 추구하는 잔잔한 몽상가입니다.', en: 'A calm mediator who is idealistic, imaginative, and pursues true values.', jp: '理想主義的で想像力が豊か、真の価値を追求する穏やかな夢想家です。', cn: '理想主义、富有想象力，追求真正价值的沉静调解者。' },
+             'ENFP': { ko: '열정적이고 재기발랄하며, 사람들과 새로운 가능성을 탐색하는 매력적인 활동가입니다.', en: 'A charming campaigner who is passionate, witty, and explores new possibilities with people.', jp: '情熱的で才気煥発、人々と新しい可能性を探求する魅力的な活動家です。', cn: '热情、充满活力，与人探索新可能性的魅力型竞选者。' },
+             'ESFP': { ko: '자유분방하고 사교적이며, 현재를 즐기고 주변 분위기를 유쾌하게 만드는 천상 연예인입니다.', en: 'A natural entertainer who is free-spirited, sociable, enjoys the present, and brightens the mood.', jp: '自由奔放で社交的、現在を楽しみ、周りの雰囲気を愉快にする天性のエンターテイナーです。', cn: '自由奔放、社交性强，享受当下，营造愉快氛围的天生表演者。' },
+             'ENFJ': { ko: '정의롭고 카리스마가 있으며, 타인의 잠재력을 이끌어내는 능력이 뛰어난 선도자입니다.', en: 'An outstanding protagonist who is righteous, charismatic, and excels at bringing out others\' potential.', jp: '正義感がありカリスマ性があり、他人の潜在能力を引き出す能力に優れた指導者です。', cn: '正义、有魅力，擅长引导他人潜能的出色主人公。' },
+             'ESFJ': { ko: '친절하고 사교성이 뛰어나며, 주변 사람들과의 관계를 원만하게 유지하는 다정한 사교가입니다.', en: 'A friendly consul who is kind, sociable, and maintains smooth relationships with those around.', jp: '親切で社交性に優れ、周りの人々との関係を円満に維持する優しい社交家です。', cn: '友善、社交能力强，与周围人保持良好关系的亲切领事。' },
+             'ENTJ': { ko: '타고난 리더십과 뛰어난 논리력을 바탕으로 대담하게 목표를 밀어붙이는 지휘관입니다.', en: 'A commander who boldly pushes towards goals based on innate leadership and excellent logic.', jp: '生まれ持ったリーダーシップと優れた論理力をもとに大胆に目標を推し進める指揮官です。', cn: '凭借天生的领导力和出色的逻辑大胆推进目标的指挥官。' },
+             'ISFP': { ko: '호기심 많고 예술적 감각이 뛰어나며, 삶을 즐기는 자유로운 영혼의 탐험가입니다.', en: 'A free-spirited adventurer who is curious, artistic, and enjoys life.', jp: '好奇心旺盛で芸術的感覚に優れ、人生を楽しむ自由な魂の探検家です。', cn: '好奇心强、富有艺术感，享受生活的自由灵魂探险家。' },
+             'ENTP': { ko: '지적 호기심이 넘치고 논쟁을 즐기며, 끊임없이 새로운 아이디어를 창출하는 발명가입니다.', en: 'An inventor full of intellectual curiosity, enjoys debates, and constantly creates new ideas.', jp: '知的好奇心に溢れ、論争を楽しみ、絶えず新しいアイデアを創出する発明家です。', cn: '充满知性好奇心，喜欢辩论，不断创造新思想的辩论家。' },
+             'INFJ': { ko: '통찰력이 뛰어나고 이상주의적이며, 세상을 더 나은 곳으로 만들고자 노력하는 옹호자입니다.', en: 'An advocate with excellent insight, idealistic, and strives to make the world a better place.', jp: '洞察力に優れ、理想主義的で、世界をより良い場所にするために努力する擁護者です。', cn: '富有洞察力、理想主义，努力让世界变得更美好的倡导者。' },
+             'ESTP': { ko: '넘치는 에너지로 문제를 즉각적으로 해결하며, 행동을 통해 배우는 활동적인 사업가입니다.', en: 'An active entrepreneur who solves problems immediately with overflowing energy and learns through action.', jp: '溢れるエネルギーで問題を即座に解決し、行動を通じて学ぶ活動的な起業家です。', cn: '精力充沛，立即解决问题，通过行动学习的活跃企业家。' }
+    };
+
+
+        let currentLang = 'ko';
+        let randomQuestions = [];
+        let currentQuestionIndex = 0;
+        let userAnswers = [];
+        let lastResultData = null; // 결과 데이터 저장 변수
+        let selectedGender = '';
+        let selectedAge = '';
+        let selectedMbti = '';
+
+        const startPage = document.getElementById('start-page');
+        const questionPage = document.getElementById('question-page');
+        const resultPage = document.getElementById('result-page');
+
+        const startBtn = document.getElementById('start-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const homeBtn = document.getElementById('home-btn');
+        const restartBtn = document.getElementById('restart-btn');
+
+        const progressText = document.getElementById('progress-text');
+        const progress = document.getElementById('progress');
+        const questionTitle = document.getElementById('question-title');
+        const questionImage = document.getElementById('question-image');
+        const optionsContainer = document.getElementById('options');
+        const questionNav = document.getElementById('question-nav');
+
+        const warningModal = document.getElementById('warning-modal');
+        const modalMessage = document.getElementById('modal-message');
+        const modalCloseBtn = document.getElementById('modal-close-btn');
+        const loadingModal = document.getElementById('loading-modal');
+        const mbtiInput = document.getElementById('mbti-input');
+        const languageSelect = document.getElementById('language-select');
+
+        // [수정됨] getTranslatedItems 함수 정의 위치 변경 (전역 스코프)
+        const getTranslatedItems = (dataObj, key, lang, count) => {
+            // key가 유효한지 먼저 확인
+            if (!dataObj || !dataObj[key]) {
+                console.error(`Error: Data object or key "${key}" is invalid.`);
+                return [];
+            }
+            const items = dataObj[key]?.[lang] || dataObj[key]?.['ko'] || [];
+            if (!Array.isArray(items)) {
+                console.error(`Error: Items for key "${key}" and lang "${lang}" is not an array.`, dataObj[key]);
+                return [];
+            }
+            // 원본 배열 변경 방지를 위해 slice() 사용, 랜덤 정렬 후 개수만큼 자르기
+            return items.slice().sort(() => 0.5 - Math.random()).slice(0, count);
+        };
+
+
+        function applyTranslations(lang) {
+            currentLang = lang;
+            document.documentElement.lang = lang; // html lang 속성 변경
+
+            // data-translate-key 속성을 가진 모든 요소 번역
+            document.querySelectorAll('[data-translate-key]').forEach(el => {
+                const key = el.getAttribute('data-translate-key');
+                // 결과 페이지의 MBTI 섹션 제목은 renderResultText에서 동적으로 설정하므로 여기서는 제외
+                if (el.id === 'mbti-section-title' && resultPage.classList.contains('active')) {
+                     return; 
+                }
+                // translations 객체에 해당 언어와 키가 있는지 확인
+                if (translations[lang] && translations[lang][key]) {
+                    el.innerText = translations[lang][key]; // 텍스트 교체
+                }
+            });
+
+            // data-translate-key-placeholder 속성을 가진 모든 요소 번역 (input placeholder)
+             document.querySelectorAll('[data-translate-key-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-translate-key-placeholder');
+                if (translations[lang] && translations[lang][key]) {
+                    el.placeholder = translations[lang][key]; // placeholder 텍스트 교체
+                }
+            });
+
+            // 페이지 제목 번역
+             const pageTitleKey = 'pageTitle';
+             if (translations[lang] && translations[lang][pageTitleKey]) {
+                 document.title = translations[lang][pageTitleKey];
+             }
+
+            // 현재 활성화된 페이지에 따라 추가 작업
+            if (questionPage.classList.contains('active')) {
+                showQuestion(currentQuestionIndex); // 질문 페이지 다시 렌더링 (옵션 텍스트 등)
+            }
+
+            if (resultPage.classList.contains('active') && lastResultData) {
+                renderResultText(); // 결과 페이지 다시 렌더링 (모든 텍스트 업데이트)
+            }
+
+            updateNextButtonText(lang); // 이전/다음 버튼 텍스트 업데이트
+        }
+
+       function updateNextButtonText(lang) {
+            if (!nextBtn || !prevBtn) return; // 버튼 없으면 종료
+
+            // 다음/결과보기 버튼
+            if (currentQuestionIndex === randomQuestions.length - 1 && randomQuestions.length > 0) { // 마지막 질문이면
+                 nextBtn.innerText = translations[lang]?.resultBtn || translations['ko'].resultBtn;
+                 nextBtn.innerHTML = translations[lang]?.resultBtn || translations['ko'].resultBtn; // innerHTML 사용 (화살표 제거 대비)
+            } else { // 마지막 질문 아니면
+                 const nextText = translations[lang]?.nextBtn || translations['ko'].nextBtn;
+                 nextBtn.innerHTML = nextText; // innerHTML 사용 (화살표 포함 가능)
+                 // 만약 번역된 텍스트에 화살표가 없다면 추가 (English 기본값 기준)
+                 if (nextText && !nextText.includes('→') && !nextText.includes('&rarr;')) {
+                    nextBtn.innerHTML += ' →';
+                 }
+            }
+            // 이전 버튼
+            const prevText = translations[lang]?.prevBtn || translations['ko'].prevBtn;
+            prevBtn.innerHTML = prevText;
+             // 만약 번역된 텍스트에 화살표가 없다면 추가
+             if (prevText && !prevText.includes('←') && !prevText.includes('&larr;')) {
+                prevBtn.innerHTML = '← ' + prevBtn.innerHTML; // 앞에 화살표 추가
+             }
+        }
+
+
+        // [수정됨] renderResultText 함수 로직
+        function renderResultText() {
+            if (!lastResultData) return; // 결과 데이터 없으면 종료
+
+            const lang = currentLang; // 현재 선택된 언어
+
+            // 동적 텍스트 업데이트 (제목, 부제, 타입)
+            const titleText = lastResultData.resultKey ? translations[lang]?.[lastResultData.resultKey + 'Title'] || translations['ko'][lastResultData.resultKey + 'Title'] : '';
+            const subtitleText = lastResultData.resultKey ? translations[lang]?.[lastResultData.resultKey + 'Sub'] || translations['ko'][lastResultData.resultKey + 'Sub'] : '';
+            const compatibleText = lastResultData.resultKey ? translations[lang]?.[lastResultData.resultKey + 'Comp'] || translations['ko'][lastResultData.resultKey + 'Comp'] : '';
+
+            document.getElementById('result-title').innerText = titleText;
+            document.getElementById('result-subtitle').innerText = subtitleText;
+            document.getElementById('compatible-type').innerText = compatibleText;
+
+            // MBTI 섹션 제목 업데이트
+            const mbtiTitleKey = lastResultData.mbtiTitleKey;
+            const mbtiSectionTitleElement = document.getElementById('mbti-section-title');
+            if(mbtiSectionTitleElement) {
+                mbtiSectionTitleElement.innerText = translations[lang]?.[mbtiTitleKey] || translations['ko'][mbtiTitleKey];
+                mbtiSectionTitleElement.setAttribute('data-translate-key', mbtiTitleKey); // data-key 업데이트
+            }
+
+            // MBTI 태그 및 설명 업데이트
+            const mbtiContainer = document.getElementById('mbti-tags');
+            mbtiContainer.innerHTML = ''; // 기존 내용 삭제
+            lastResultData.mbtiTop3.forEach(mbti => {
+                const description = mbtiDescriptions[mbti]?.[lang] || mbtiDescriptions[mbti]?.['ko'] || "Description unavailable"; // 현재 언어 설명 가져오기
+                const itemDiv = document.createElement('div');
+                itemDiv.classList.add('mbti-tag-item');
+                itemDiv.innerHTML = `<div class="mbti-tag">${mbti}</div><p class="mbti-description">${description}</p>`;
+                mbtiContainer.appendChild(itemDiv);
+            });
+
+            // 키워드 및 성격 태그 업데이트 (현재 언어로 다시 가져오기)
+            const randomKeywords = getTranslatedItems(resultKeywords, lastResultData.keywordKey, lang, 3);
+            const randomTraits = getTranslatedItems(resultTraits, lastResultData.traitKey, lang, 3);
+            const randomCompatibleKeywords = getTranslatedItems(resultKeywords, lastResultData.compatibleKeywordKey, lang, 3);
+            const randomCompatibleTraits = getTranslatedItems(resultTraits, lastResultData.compatibleTraitKey, lang, 3);
+
+            // 각 컨테이너 업데이트 함수
+            const renderTags = (containerId, tags) => {
+                const container = document.getElementById(containerId);
+                if (container) {
+                    container.innerHTML = ''; // 기존 태그 삭제
+                    tags.forEach(tagText => {
+                        container.innerHTML += `<div class="keyword-tag">${tagText}</div>`;
+                    });
+                }
+            };
+
+            renderTags('keyword-container', randomKeywords);
+            renderTags('trait-tag-container', randomTraits);
+            renderTags('compatible-keyword-container', randomCompatibleKeywords);
+            renderTags('compatible-trait-container', randomCompatibleTraits);
+
+            // 결과 페이지 내 고정 텍스트 요소들 강제 업데이트 (data-translate-key 기반)
+             document.querySelectorAll('#result-page [data-translate-key]').forEach(el => {
+                // MBTI 제목은 위에서 이미 처리했으므로 제외
+                if (el.id === 'mbti-section-title') return;
+                
+                const key = el.getAttribute('data-translate-key');
+                if (translations[lang] && translations[lang][key]) {
+                    el.innerText = translations[lang][key];
+                }
+            });
+        }
+
+
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+
+            // 시작 페이지 로고 표시/숨김
+            const logo = document.getElementById('ku-logo');
+            if (logo) {
+                logo.style.display = (pageId === 'start-page') ? 'block' : 'none';
+            }
+        }
+
+        function showModal(key, replacements = {}) {
+             const lang = currentLang;
+             let message = translations[lang]?.[key] || translations['ko'][key] || key;
+
+             Object.keys(replacements).forEach(placeholder => {
+                 message = message.replace(`{${placeholder}}`, replacements[placeholder]);
+             });
+
+            modalMessage.innerText = message;
+            warningModal.classList.add('visible');
+        }
+
+        function closeModal() {
+            warningModal.classList.remove('visible');
+        }
+
+        function resetTest() {
+            randomQuestions = [];
+            currentQuestionIndex = 0;
+            userAnswers = [];
+            lastResultData = null; // 결과 데이터 초기화
+            selectedGender = '';
+            selectedAge = '';
+            selectedMbti = '';
+            progress.style.width = '0%';
+
+            // 입력 필드 초기화
+            document.getElementById('age-select').value = "";
+            document.getElementById('gender-select').value = "";
+            document.getElementById('mbti-input').value = "";
+
+            applyTranslations(currentLang); // 현재 언어로 UI 초기화
+            showPage('start-page'); // 시작 페이지로 이동
+        }
+
+        function startTest() {
+            // 사용자 입력값 저장
+            selectedAge = document.getElementById('age-select').value;
+            selectedGender = document.getElementById('gender-select').value;
+            selectedMbti = mbtiInput.value.trim().toLowerCase();
+
+            // 질문 랜덤 선택 (Teto 10개, Egen 10개 후 섞기)
+            const tetoQuestions = allQuestions.filter(q => q.type === 'Teto').sort(() => 0.5 - Math.random()).slice(0, 10);
+            const egenQuestions = allQuestions.filter(q => q.type === 'Egen').sort(() => 0.5 - Math.random()).slice(0, 10);
+            randomQuestions = [...tetoQuestions, ...egenQuestions].sort(() => 0.5 - Math.random());
+
+            currentQuestionIndex = 0; // 첫 번째 질문부터 시작
+            userAnswers = Array(randomQuestions.length).fill(null); // 답변 배열 초기화
+
+            // 질문 네비게이션 생성
+            questionNav.innerHTML = '';
+            for (let i = 0; i < randomQuestions.length; i++) {
+                const navItem = document.createElement('div');
+                navItem.classList.add('nav-item');
+                navItem.innerText = i + 1;
+                navItem.addEventListener('click', () => jumpToQuestion(i)); // 클릭 시 해당 질문으로 이동
+                questionNav.appendChild(navItem);
+            }
+
+            showQuestion(currentQuestionIndex); // 첫 번째 질문 표시
+            showPage('question-page'); // 질문 페이지로 전환
+        }
+
+        function jumpToQuestion(index) {
+            // 현재 질문에 답이 있다면 저장
+            const currentSelectedOption = document.querySelector(`input[name="q${currentQuestionIndex}"]:checked`);
+             if (currentSelectedOption) {
+                userAnswers[currentQuestionIndex] = { questionId: randomQuestions[currentQuestionIndex].id, answer: parseInt(currentSelectedOption.value) };
+            }
+            updateNavItems(); // 네비게이션 상태 업데이트 (이동 전에)
+
+            currentQuestionIndex = index; // 인덱스 이동
+            showQuestion(currentQuestionIndex); // 해당 질문 표시
+        }
+
+        function showQuestion(index) {
+            if (index < 0 || index >= randomQuestions.length) { return; } // 인덱스 범위 확인
+
+            const question = randomQuestions[index];
+            const lang = currentLang;
+
+            // 진행률 텍스트/바 업데이트
+            const progressFormat = translations[lang]?.progressTextFormat || translations['ko'].progressTextFormat;
+            progressText.innerText = progressFormat.replace('{current}', index + 1).replace('{total}', randomQuestions.length);
+            progress.style.width = `${((index + 1) / randomQuestions.length) * 100}%`;
+
+            // 질문 제목/이미지 업데이트
+            questionTitle.innerHTML = `<span>Q${index + 1}.</span> <span>${question[lang] || question['ko']}</span>`;
+            questionImage.src = question.image;
+            questionImage.alt = question[lang] || question['ko'];
+
+            // 선택 옵션 (라디오 버튼) 생성
+            optionsContainer.innerHTML = '';
+            optionsData.forEach(option => {
+                const optionId = `q${index}_opt${option.value}`;
+                const optionText = option[lang] || option['ko'];
+                optionsContainer.innerHTML += `
+                    <input type="radio" name="q${index}" value="${option.value}" id="${optionId}" class="option-input">
+                    <label for="${optionId}" class="option-label">${optionText}</label>
+                `;
+            });
+
+            // 라디오 버튼 이벤트 리스너 (답변 저장 및 네비 업데이트)
+            document.querySelectorAll(`input[name="q${index}"]`).forEach(radio => {
+                radio.addEventListener('change', (event) => {
+                    userAnswers[index] = { questionId: question.id, answer: parseInt(event.target.value) };
+                    updateNavItems();
+                });
+            });
+
+            // 저장된 답변이 있으면 체크 상태 복원
+            if (userAnswers[index]) {
+                const radioToSelect = document.getElementById(`q${index}_opt${userAnswers[index].answer}`);
+                if (radioToSelect) radioToSelect.checked = true;
+            }
+
+            prevBtn.style.visibility = (index === 0) ? 'hidden' : 'visible'; // 이전 버튼 표시/숨김
+            updateNextButtonText(lang); // 다음/결과 버튼 텍스트
+            updateNavItems(); // 네비게이션 상태
+        }
+
+        function updateNavItems() {
+            document.querySelectorAll('.nav-item').forEach((item, itemIndex) => {
+                item.classList.remove('active', 'unanswered', 'answered');
+                if (userAnswers[itemIndex] === null) { // 미답변
+                    if (itemIndex < currentQuestionIndex) item.classList.add('unanswered'); // 지나온 미답변
+                } else { // 답변함
+                    item.classList.add('answered');
+                }
+                 // 현재 질문 활성화 (미답변/답변됨 상태와 별개)
+                if (itemIndex === currentQuestionIndex) {
+                    item.classList.remove('unanswered', 'answered'); // 활성 상태에서는 다른 상태 제거
+                    item.classList.add('active');
+                }
+            });
+        }
+
+
+        function showResult() {
+            loadingModal.classList.add('visible');
+            const calculationLang = currentLang; // 결과 계산 시점 언어 저장 (초기 렌더링용)
+
+            setTimeout(() => {
+                let tetoScore = 0, egenScore = 0, tetoCount = 0, egenCount = 0;
+                userAnswers.forEach((answer, index) => {
+                    if (!answer) return;
+                    const question = randomQuestions[index];
+                    if (question.type === 'Teto') { tetoScore += answer.answer; tetoCount++; }
+                    else { egenScore += answer.answer; egenCount++; }
+                });
+
+                let ageBonusTeto = 0, ageBonusEgen = 0;
+                if (['10s', '20s'].includes(selectedAge)) ageBonusEgen = 2;
+                else if (['50s', '60s', '70s_plus'].includes(selectedAge)) ageBonusTeto = 2;
+                let mbtiBonusTeto = (selectedMbti.includes('t') || selectedMbti.includes('j')) ? 3 : 0;
+                let mbtiBonusEgen = (selectedMbti.includes('f') || selectedMbti.includes('p')) ? 3 : 0;
+
+                tetoScore += ageBonusTeto + mbtiBonusTeto;
+                egenScore += ageBonusEgen + mbtiBonusEgen;
+
+                const totalTeto = tetoCount > 0 ? (tetoScore - tetoCount) / (tetoCount * 4) : 0;
+                const totalEgen = egenCount > 0 ? (egenScore - egenCount) / (egenCount * 4) : 0;
+                const totalSum = totalTeto + totalEgen;
+                const tetoPercentage = totalSum > 0 ? Math.round((totalTeto / totalSum) * 100) : 50;
+                const egenPercentage = 100 - tetoPercentage;
+
+                let resultKey, mbtiKey, keywordKey, traitKey, compatibleKeywordKey, compatibleTraitKey, compatibleMbtiKey;
+                const isMale = selectedGender === 'male';
+
+                if (Math.abs(tetoPercentage - egenPercentage) < 6) { // Balance
+                    [resultKey, mbtiKey, keywordKey, traitKey, compatibleKeywordKey, compatibleTraitKey, compatibleMbtiKey] =
+                    ['resultBalance', 'Balance', 'Balance', 'Balance', 'Balance', 'Balance', 'Balance'];
+                } else if (tetoPercentage > egenPercentage) { // Teto
+                    resultKey = isMale ? 'resultTetoMale' : 'resultTetoFemale';
+                    mbtiKey = isMale ? 'TetoMale' : 'TetoFemale';
+                    [keywordKey, traitKey] = [mbtiKey, mbtiKey];
+                    compatibleKeywordKey = isMale ? 'EgenFemale' : 'EgenMale';
+                    [compatibleTraitKey, compatibleMbtiKey] = [compatibleKeywordKey, compatibleKeywordKey];
+                } else { // Egen
+                    resultKey = isMale ? 'resultEgenMale' : 'resultEgenFemale';
+                    mbtiKey = isMale ? 'EgenMale' : 'EgenFemale';
+                    [keywordKey, traitKey] = [mbtiKey, mbtiKey];
+                    compatibleKeywordKey = isMale ? 'TetoFemale' : 'TetoMale';
+                    [compatibleTraitKey, compatibleMbtiKey] = [compatibleKeywordKey, compatibleKeywordKey];
+                }
+
+                const mbtiTop3 = realisticMbtiData[compatibleMbtiKey] || [];
+                const mbtiTitleKey = resultKey === 'resultBalance' ? 'mbtiSelfTitle' : 'mbtiCompTitle';
+
+                // 결과 데이터 저장 (키 정보만)
+                lastResultData = {
+                    resultKey, mbtiTop3, mbtiTitleKey, keywordKey, traitKey, compatibleKeywordKey, compatibleTraitKey
+                };
+
+                // 초기 결과 렌더링 (calculationLang 기준)
+                renderResultText(); // 이 함수는 내부에서 currentLang을 사용
+
+                // 퍼센트 바 업데이트
+                const tetoBar = document.getElementById('teto-bar');
+                const egenBar = document.getElementById('egen-bar');
+                tetoBar.style.width = `${tetoPercentage}%`;
+                tetoBar.innerText = `${tetoPercentage}%`;
+                egenBar.style.width = `${egenPercentage}%`;
+                egenBar.innerText = `${egenPercentage}%`;
+
+                loadingModal.classList.remove('visible'); // 로딩 숨김
+                showPage('result-page'); // 결과 페이지 표시
+            }, 2000);
+        }
+
+        // --- 이벤트 리스너 ---
+        startBtn.addEventListener('click', () => {
+            const age = document.getElementById('age-select').value;
+            const gender = document.getElementById('gender-select').value;
+            const mbtiValue = mbtiInput.value.trim();
+            if (!age || !gender || !mbtiValue) {
+                showModal('modalInputWarning'); return;
+            }
+            if (mbtiValue.length !== 4 || !validMbtiTypes.includes(mbtiValue.toLowerCase())) {
+                showModal('modalMbtiWarning'); return;
+            }
+            startTest();
+        });
+
+        nextBtn.addEventListener('click', () => {
+            const selectedOption = document.querySelector(`input[name="q${currentQuestionIndex}"]:checked`);
+            if (selectedOption) { // 현재 질문 답변 저장
+                userAnswers[currentQuestionIndex] = { questionId: randomQuestions[currentQuestionIndex].id, answer: parseInt(selectedOption.value) };
+                updateNavItems();
+            }
+
+            if (currentQuestionIndex === randomQuestions.length - 1) { // 마지막 질문이면
+                const unanswered = userAnswers.map((a, i) => a === null ? i + 1 : null).filter(n => n !== null);
+                if (unanswered.length > 0) { // 미답변 있으면
+                    showModal('modalUnansweredWarning', { questions: unanswered.map(n => `Q${n}`).join(', ') });
+                } else { // 다 답변했으면
+                    showResult();
+                }
+            } else { // 다음 질문으로
+                currentQuestionIndex++;
+                showQuestion(currentQuestionIndex);
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                // 현재 답변 저장 후 이동
+                const selectedOption = document.querySelector(`input[name="q${currentQuestionIndex}"]:checked`);
+                if (selectedOption) {
+                    userAnswers[currentQuestionIndex] = { questionId: randomQuestions[currentQuestionIndex].id, answer: parseInt(selectedOption.value) };
+                }
+                 updateNavItems(); // 현재 상태 저장 후 네비 업데이트
+                
+                currentQuestionIndex--;
+                showQuestion(currentQuestionIndex);
+            }
+        });
+
+        modalCloseBtn.addEventListener('click', closeModal);
+        warningModal.addEventListener('click', (e) => { if (e.target === warningModal) closeModal(); });
+        homeBtn.addEventListener('click', resetTest);
+        restartBtn.addEventListener('click', resetTest);
+        languageSelect.addEventListener('change', (e) => applyTranslations(e.target.value));
+
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', () => {
+             applyTranslations(currentLang);
+             showPage('start-page');
+        });
+
+    </script>
+</body>
+</html>
